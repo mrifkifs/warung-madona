@@ -92,14 +92,18 @@ window.openModal = function(id) {
     const menu = menuDatabase.find(m => m.id === id);
     if (!menu) return;
 
+    // --- TAMBAHKAN BARIS INI UNTUK MEMBERSIHKAN PILIHAN LAMA ---
+    document.querySelector('input[name="opt-saji"][value="Dine-in"]').checked = true;
+    document.getElementById('opt-pedas').value = "Original";
+    document.getElementById('opt-suhu').value = "Dingin (Es)";
+    // -----------------------------------------------------------
+
     document.getElementById('modal-id-menu').value = id;
     document.getElementById('modal-kategori-menu').value = menu.kategori;
     document.getElementById('modal-nama-menu').innerText = menu.nama;
     document.getElementById('opt-catatan').value = '';
 
-    document.getElementById('block-pedas').style.display = menu.kategori === 'Makanan' ? 'block' : 'none';
-    document.getElementById('block-suhu').style.display = menu.kategori === 'Minuman' ? 'block' : 'none';
-
+}
     const blockTopping = document.getElementById('block-topping');
     const containerTopping = document.getElementById('topping-container');
     
@@ -124,7 +128,6 @@ window.openModal = function(id) {
 
     const modal = document.getElementById('modal-kustom');
     if (modal) modal.classList.add('show');
-}
 
 // 4. INTERAKSI KERANJANG DAN FORM CHECKOUT
 function setupUIInteractions() {
