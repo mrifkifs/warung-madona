@@ -1,9 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-// ==========================================
 // KONFIGURASI FIREBASE ASLI WARUNG MADONA
-// ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyAFCQw6Z6xMKRfJtSyD6HqOFxvLhj26J3w",
   authDomain: "warung-madona.firebaseapp.com",
@@ -64,8 +62,6 @@ function renderMenuCards(menus) {
         const isHabis = menu.status === 'Habis';
         const classHabis = isHabis ? 'is-habis' : '';
         const tagHabis = isHabis ? `<div class="badge-status status-habis">Stok Habis</div>` : '';
-        
-        // Membaca Base64 string foto langsung atau menggunakan placeholder jika kosong
         const img = menu.fotoUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600';
 
         html += `
@@ -91,7 +87,7 @@ function renderMenuCards(menus) {
     container.innerHTML = html;
 }
 
-// 3. LOGIKA POPUP MODAL & TOPIING VARIANT
+// 3. LOGIKA POPUP MODAL & TOPPING VARIANT
 window.openModal = function(id) {
     const menu = menuDatabase.find(m => m.id === id);
     if (!menu) return;
@@ -101,11 +97,9 @@ window.openModal = function(id) {
     document.getElementById('modal-nama-menu').innerText = menu.nama;
     document.getElementById('opt-catatan').value = '';
 
-    // Filter Tampilan Form Sesuai Kategori
     document.getElementById('block-pedas').style.display = menu.kategori === 'Makanan' ? 'block' : 'none';
     document.getElementById('block-suhu').style.display = menu.kategori === 'Minuman' ? 'block' : 'none';
 
-    // Ambil Data Sub-Topping Dinamis dari Firebase Array
     const blockTopping = document.getElementById('block-topping');
     const containerTopping = document.getElementById('topping-container');
     
@@ -138,7 +132,6 @@ function setupUIInteractions() {
     const closeMdl = document.querySelector('.close-modal');
     if (closeMdl) closeMdl.onclick = () => modal.classList.remove('show');
     
-    // Filter Kategori Tab Depan
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.onclick = () => {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -148,7 +141,6 @@ function setupUIInteractions() {
         };
     });
 
-    // Masukkan Pilihan Menu ke Struk Keranjang
     const btnAddCart = document.getElementById('btn-tambah-keranjang');
     if (btnAddCart) {
         btnAddCart.onclick = () => {
@@ -178,14 +170,12 @@ function setupUIInteractions() {
         };
     }
 
-    // Navigasi Sidebar Slide Panel
     const fab = document.getElementById('fab-cart');
     if (fab) fab.onclick = () => document.getElementById('sidebar-keranjang').classList.add('open');
     
     const closeCrt = document.querySelector('.close-cart');
     if (closeCrt) closeCrt.onclick = () => document.getElementById('sidebar-keranjang').classList.remove('open');
 
-    // Integrasi Kasir WhatsApp
     const btnCheckout = document.getElementById('btn-checkout-wa');
     if (btnCheckout) btnCheckout.onclick = processCheckout;
 }
@@ -224,6 +214,7 @@ function updateCartUI() {
 window.chgQty = (i, delta) => { shoppingCart[i].qty += delta; if(shoppingCart[i].qty <= 0) shoppingCart.splice(i,1); updateCartUI(); };
 window.delItem = i => { shoppingCart.splice(i,1); updateCartUI(); };
 
+// FORMAT CHECKOUT KASIR WHATSAPP PRESISI & PREMIUM
 function processCheckout() {
     const nama = document.getElementById('nama-pelanggan').value.trim();
     const alamat = document.getElementById('alamat-pelanggan').value.trim();
@@ -231,22 +222,29 @@ function processCheckout() {
     if(shoppingCart.length === 0) return alert("Keranjang belanja Anda masih kosong!");
 
     let total = 0;
-    let struk = `✨ *WARUNG MADONA - STRUK PESANAN* ✨\n\n`;
-    struk += `👤 *Pemesan:* ${nama}\n📍 *Lokasi/Meja:* ${alamat}\n`;
-    struk += `=========================\n`;
+    
+    let struk = `*🧾 NOTA PESANAN - WARUNG MADONA*\n`;
+    struk += `----------------------------------------\n`;
+    struk += `👤 *Pemesan:* ${nama}\n`;
+    struk += `📍 *Lokasi/Meja:* ${alamat}\n`;
+    struk += `----------------------------------------\n\n`;
+    struk += `🛒 *DETAIL HIDANGAN:*`;
     
     shoppingCart.forEach(item => {
         const sub = item.harga * item.qty;
         total += sub;
-        struk += `\n🍲 *${item.qty}x ${item.nama}*\n`;
-        struk += `   _${item.detail}_\n`;
-        if(item.note) struk += `   📝 Catatan: ${item.note}\n`;
-        struk += `   💰 Rp ${sub.toLocaleString('id-ID')}\n`;
+        struk += `\n\n🔸 *${item.qty}x ${item.nama}*\n`;
+        struk += `   • Varian: ${item.detail}\n`;
+        if(item.note) {
+            struk += `   • Catatan: ${item.note}\n`;
+        }
+        struk += `   • Subtotal: Rp ${sub.toLocaleString('id-ID')}`;
     });
     
-    struk += `\n=========================\n`;
-    struk += `🔥 *TOTAL TAGIHAN: Rp ${total.toLocaleString('id-ID')}*\n`;
-    struk += `=========================\n\nMohon segera diproses ya Mang! Hatur nuhun 🙏`;
+    struk += `\n\n----------------------------------------\n`;
+    struk += `💰 *TOTAL TAGIHAN: Rp ${total.toLocaleString('id-ID')}*\n`;
+    struk += `----------------------------------------\n\n`;
+    struk += `Mohon segera diproses ya Mang!\nHatur nuhun 🙏✨`;
 
     window.open(`https://wa.me/${WA_MADONA}?text=${encodeURIComponent(struk)}`, '_blank');
 }
