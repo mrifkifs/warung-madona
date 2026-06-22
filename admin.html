@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>MADONA - Admin Executive Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; color: #f8fafc; padding: 30px; margin: 0; }
+        .wrapper { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 450px 1fr; gap: 30px; }
+        h1 { color: #d97706; font-size: 1.8rem; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+        .card { background: #1e293b; border: 1px solid rgba(255,255,255,0.1); padding: 25px; border-radius: 12px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; color: #cbd5e1; margin-bottom: 5px; font-weight: 600; }
+        input, select, textarea { width: 100%; padding: 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-family: inherit; }
+        input:focus, select:focus { border-color: #d97706; outline: none; }
+        
+        /* Dinamis Topping Form */
+        .topping-area { border: 1px dashed rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-bottom: 15px; background: rgba(0,0,0,0.2); }
+        .topping-row { display: grid; grid-template-columns: 1fr 120px 40px; gap: 10px; margin-bottom: 10px; align-items: center; }
+        .btn-add-top { background: transparent; border: 1px solid #059669; color: #059669; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; width: 100%; }
+        .btn-del-top { background: #ef4444; border: none; color: white; height: 100%; border-radius: 6px; cursor: pointer; }
+        
+        .btn-submit { width: 100%; padding: 15px; background: #d97706; color: #0f172a; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: 10px; }
+        .btn-submit:hover { background: #f59e0b; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); text-align: left; }
+        th { color: #94a3b8; }
+        .img-td { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+        .bg-ada { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .bg-habis { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 1rem; margin-right: 10px; color: #cbd5e1; }
+        .action-btn:hover { color: #d97706; }
+        
+        @media (max-width: 900px) { .wrapper { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="card">
+            <h1 id="form-title"><i class="fa-solid fa-utensils"></i> Tambah Menu Baru</h1>
+            <form id="form-admin">
+                <input type="hidden" id="edit-id">
+                <div class="form-group"><label>Nama Menu</label><input type="text" id="inp-nama" required></div>
+                <div class="form-group">
+                    <label>Kategori</label>
+                    <select id="inp-kategori">
+                        <option value="Makanan">Makanan</option>
+                        <option value="Minuman">Minuman</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Harga (Rp)</label><input type="number" id="inp-harga" required></div>
+                <div class="form-group"><label>Deskripsi Pendek</label><textarea id="inp-desc" rows="2"></textarea></div>
+                <div class="form-group">
+                    <label>Status Menu Utama</label>
+                    <select id="inp-status">
+                        <option value="Tersedia">Tersedia</option>
+                        <option value="Habis">Habis / Kosong</option>
+                    </select>
+                </div>
+                
+                <!-- AREA MANAJEMEN TOPPING DINAMIS -->
+                <div class="topping-area">
+                    <label style="color:#d97706;"><i class="fa-solid fa-layer-group"></i> Varian / Topping (Opsional)</label>
+                    <div id="topping-list"></div>
+                    <button type="button" class="btn-add-top" onclick="addToppingRow()">+ Tambah Baris Topping</button>
+                </div>
+                
+                <div class="form-group"><label>Foto (Upload File)</label><input type="file" id="inp-foto" accept="image/*"></div>
+                
+                <button type="submit" class="btn-submit" id="btn-save">Simpan ke Database</button>
+                <button type="button" class="btn-submit" style="background:#334155; color:white; display:none;" id="btn-cancel" onclick="resetForm()">Batal Edit</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h1><i class="fa-solid fa-list-check"></i> Daftar Menu Database</h1>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead><tr><th>Foto</th><th>Nama</th><th>Kategori</th><th>Harga</th><th>Status</th><th>Aksi</th></tr></thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT FIREBASE & ADMIN LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+
+        // ==========================================
+        // KONFIGURASI FIREBASE WARUNG MADONA
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFCQw6Z6xMKRfJtSyD6HqOFxvLhj26J3w",
+            authDomain: "warung-madona.firebaseapp.com",
+            projectId: "warung-madona",
+            storageBucket: "warung-madona.firebasestorage.app",
+            messagingSenderId: "344709595688",
+            appId: "1:344709595688:web:7a7bc2e65706a32854ab1d",
+            measurementId: "G-SBW637XJZF"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let menuCache = [];
+
+        // ==========================================
+        // FUNGSI KOMPRESI GAMBAR OTOMATIS (MAX 800px)
+        // ==========================================
+        async function compressImage(file, maxWidth = 800, quality = 0.7) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Perkecil ukuran jika melebihi batas maksimal
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Konversi kembali menjadi file siap upload
+                        canvas.toBlob((blob) => {
+                            resolve(new File([blob], "compressed_" + file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            }));
+                        }, 'image/jpeg', quality);
+                    };
+                };
+            });
+        }
+
+        // ==========================================
+        // LOGIKA DINAMIS TOPPING UI
+        // ==========================================
+        window.addToppingRow = (nama = '', status = 'Tersedia') => {
+            const container = document.getElementById('topping-list');
+            const row = document.createElement('div');
+            row.className = 'topping-row';
+            row.innerHTML = `
+                <input type="text" placeholder="Nama Topping..." class="top-name" value="${nama}" required>
+                <select class="top-status">
+                    <option value="Tersedia" ${status==='Tersedia'?'selected':''}>Tersedia</option>
+                    <option value="Habis" ${status==='Habis'?'selected':''}>Habis</option>
+                </select>
+                <button type="button" class="btn-del-top" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+            `;
+            container.appendChild(row);
+        };
+
+        window.resetForm = () => {
+            document.getElementById('form-admin').reset();
+            document.getElementById('edit-id').value = '';
+            document.getElementById('topping-list').innerHTML = '';
+            document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-utensils"></i> Tambah Menu Baru';
+            document.getElementById('btn-save').innerText = 'Simpan ke Database';
+            document.getElementById('btn-cancel').style.display = 'none';
+        };
+
+        // ==========================================
+        // EVENT SUBMIT (SIMPAN DATA + UPLOAD FOTO)
+        // ==========================================
+        document.getElementById('form-admin').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnSave = document.getElementById('btn-save');
+            btnSave.disabled = true; 
+            btnSave.innerText = "Memproses...";
+
+            try {
+                const id = document.getElementById('edit-id').value;
+                let fotoUrl = id ? menuCache.find(m => m.id === id).fotoUrl : '';
+                
+                const fileInput = document.getElementById('inp-foto');
+                
+                // PROSES KOMPRESI DAN UPLOAD GAMBAR
+                if (fileInput.files.length > 0) {
+                    const originalFile = fileInput.files[0];
+                    
+                    btnSave.innerText = "Mengompres Foto...";
+                    const compressedFile = await compressImage(originalFile);
+                    
+                    btnSave.innerText = "Mengunggah ke Cloud...";
+                    const stRef = ref(storage, `madona/${Date.now()}_${compressedFile.name}`);
+                    fotoUrl = await getDownloadURL((await uploadBytes(stRef, compressedFile)).ref);
+                }
+
+                // Susun Array Topping
+                let toppingArray = [];
+                document.querySelectorAll('.topping-row').forEach(row => {
+                    toppingArray.push({
+                        nama: row.querySelector('.top-name').value,
+                        status: row.querySelector('.top-status').value
+                    });
+                });
+
+                const payload = {
+                    nama: document.getElementById('inp-nama').value,
+                    kategori: document.getElementById('inp-kategori').value,
+                    harga: parseInt(document.getElementById('inp-harga').value),
+                    deskripsi: document.getElementById('inp-desc').value,
+                    status: document.getElementById('inp-status').value,
+                    toppings: toppingArray,
+                    fotoUrl: fotoUrl
+                };
+
+                // Eksekusi ke Database (Tambah / Update)
+                if (id) {
+                    await updateDoc(doc(db, "madona_menu", id), payload);
+                    alert("Menu berhasil di-update!");
+                } else {
+                    payload.createdAt = Date.now();
+                    await addDoc(collection(db, "madona_menu"), payload);
+                    alert("Menu baru berhasil ditambahkan!");
+                }
+                
+                resetForm();
+                loadTable();
+            } catch (err) { 
+                alert("Terjadi kesalahan: " + err.message); 
+            } finally { 
+                btnSave.disabled = false; 
+                btnSave.innerText = "Simpan ke Database";
+            }
+        });
+
+        // ==========================================
+        // LOAD DATA UNTUK TABEL
+        // ==========================================
+        async function loadTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '<tr><td colspan="6">Memuat data...</td></tr>';
+            
+            try {
+                const snapshot = await getDocs(query(collection(db, "madona_menu"), orderBy("createdAt", "desc")));
+                menuCache = []; 
+                tbody.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const m = doc.data(); 
+                    menuCache.push({id: doc.id, ...m});
+                    const bdg = m.status === 'Tersedia' ? 'bg-ada' : 'bg-habis';
+                    const img = m.fotoUrl || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=100';
+                    
+                    // Hindari error jika toppings undefined
+                    const jumlahTopping = m.toppings ? m.toppings.length : 0;
+                    
+                    tbody.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td><img src="${img}" class="img-td"></td>
+                            <td><strong>${m.nama}</strong><br><small style="color:#94a3b8">${jumlahTopping} Topping</small></td>
+                            <td>${m.kategori}</td>
+                            <td>Rp ${m.harga.toLocaleString('id-ID')}</td>
+                            <td><span class="badge ${bdg}">${m.status}</span></td>
+                            <td>
+                                <button class="action-btn" onclick="editData('${doc.id}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="action-btn" onclick="deleteData('${doc.id}')"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="6" style="color:#ef4444;">Gagal menarik data dari server. Pastikan Rules Firestore sudah true.</td></tr>';
+            }
+        }
+
+        // ==========================================
+        // FUNGSI EDIT DAN HAPUS
+        // ==========================================
+        window.editData = (id) => {
+            const m = menuCache.find(x => x.id === id);
+            document.getElementById('edit-id').value = m.id;
+            document.getElementById('inp-nama').value = m.nama;
+            document.getElementById('inp-kategori').value = m.kategori;
+            document.getElementById('inp-harga').value = m.harga;
+            document.getElementById('inp-desc').value = m.deskripsi || '';
+            document.getElementById('inp-status').value = m.status;
+            
+            document.getElementById('topping-list').innerHTML = '';
+            if(m.toppings) {
+                m.toppings.forEach(t => addToppingRow(t.nama, t.status));
+            }
+            
+            document.getElementById('form-title').innerHTML = `<i class="fa-solid fa-pen"></i> Edit: ${m.nama}`;
+            document.getElementById('btn-save').innerText = 'Update Data';
+            document.getElementById('btn-cancel').style.display = 'block';
+            window.scrollTo(0,0);
+        };
+
+        window.deleteData = async (id) => {
+            if(confirm('Hapus permanen menu ini?')) {
+                await deleteDoc(doc(db, "madona_menu", id));
+                loadTable();
+            }
+        };
+
+        // Panggil saat halaman dimuat
+        loadTable();
+    </script>
+</body>
+</html>

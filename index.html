@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MADONA | Kuliner Sunda Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- HERO SECTION PREMIUM -->
+    <header class="hero-section">
+        <div class="hero-overlay"></div>
+        <nav class="top-nav">
+            <div class="logo-text">MADONA</div>
+            <a href="#menu" class="btn-outline-gold">Pesan Sekarang</a>
+        </nav>
+        <div class="hero-content">
+            <span class="badge-premium">Cita Rasa Warisan Nusantara</span>
+            <h1 class="hero-title">Kuliner Sunda <span>Otentik</span> & Seblak Prasmanan</h1>
+            <p class="hero-subtitle">Nikmati racikan bumbu rahasia keluarga dengan bahan segar berkualitas tinggi setiap harinya.</p>
+            <div class="hero-info-grid">
+                <div class="info-card"><i class="fa-regular fa-clock"></i> 08.00 - 18.00 WIB</div>
+                <div class="info-card"><i class="fa-solid fa-location-dot"></i> Karangtengah, Cianjur</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ETALASE MENU -->
+    <section id="menu" class="menu-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Eksplorasi Rasa</h2>
+                <div class="separator-line"></div>
+            </div>
+
+            <div class="category-filter">
+                <button class="filter-btn active" data-filter="Semua">Semua Hidangan</button>
+                <button class="filter-btn" data-filter="Makanan">Makanan Khas</button>
+                <button class="filter-btn" data-filter="Minuman">Minuman Segar</button>
+            </div>
+
+            <div id="menu-container" class="menu-grid">
+                <div class="loading-state"><i class="fa-solid fa-spinner fa-spin"></i> Menghubungkan ke Dapur Madona...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODAL KUSTOMISASI PREMIUM -->
+    <div id="modal-kustom" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div>
+                    <span class="modal-subtitle">Kustomisasi Pesanan</span>
+                    <h3 id="modal-nama-menu">Nama Menu</h3>
+                </div>
+                <button class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modal-id-menu">
+                <input type="hidden" id="modal-kategori-menu">
+                
+                <div class="form-group">
+                    <label>Metode Penyajian</label>
+                    <div class="radio-cards">
+                        <label class="radio-card">
+                            <input type="radio" name="opt-saji" value="Dine-in" checked>
+                            <div class="card-content"><i class="fa-solid fa-utensils"></i> Makan di Tempat</div>
+                        </label>
+                        <label class="radio-card">
+                            <input type="radio" name="opt-saji" value="Takeaway">
+                            <div class="card-content"><i class="fa-solid fa-bag-shopping"></i> Bungkus</div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="block-pedas">
+                    <label>Tingkat Kepedasan</label>
+                    <select id="opt-pedas" class="select-premium">
+                        <option value="Original">Original (Tidak Pedas)</option>
+                        <option value="Sedang">Pedas Sedang</option>
+                        <option value="Sangat Pedas">Sangat Pedas</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="block-suhu" style="display: none;">
+                    <label>Pilihan Suhu</label>
+                    <select id="opt-suhu" class="select-premium">
+                        <option value="Dingin (Es)">Dingin (Pakai Es)</option>
+                        <option value="Panas">Panas / Hangat</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="block-topping" style="display: none;">
+                    <label>Varian & Topping Tambahan</label>
+                    <div id="topping-container" class="topping-grid">
+                        <!-- Render dari Firebase -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Catatan Khusus (Opsional)</label>
+                    <input type="text" id="opt-catatan" class="input-premium" placeholder="Contoh: Sayur kol dipisah, dsb.">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btn-tambah-keranjang" class="btn-solid-gold">Tambah ke Pesanan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDEBAR KERANJANG -->
+    <div id="sidebar-keranjang" class="cart-sidebar">
+        <div class="cart-header">
+            <h3><i class="fa-solid fa-receipt"></i> Struk Pesanan</h3>
+            <button class="close-cart"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div id="cart-items" class="cart-body">
+            <!-- Item Keranjang -->
+        </div>
+        <div class="cart-footer">
+            <div class="input-group">
+                <input type="text" id="nama-pelanggan" class="input-premium" placeholder="Nama Pemesan" required>
+            </div>
+            <div class="input-group" style="margin-top: 10px;">
+                <input type="text" id="alamat-pelanggan" class="input-premium" placeholder="Nomor Meja / Alamat Pengiriman" required>
+            </div>
+            <div class="cart-total-box">
+                <span>Total Tagihan</span>
+                <span id="total-harga" class="total-angka">Rp 0</span>
+            </div>
+            <button id="btn-checkout-wa" class="btn-whatsapp"><i class="fa-brands fa-whatsapp"></i> Konfirmasi Pesanan via WA</button>
+        </div>
+    </div>
+
+    <!-- FLOATING CART -->
+    <button id="fab-cart" class="fab-cart">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <span id="fab-count" class="fab-count">0</span>
+    </button>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
